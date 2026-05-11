@@ -1,20 +1,35 @@
 import React, { useEffect, useState } from "react";
-import PlantList from "./PlantList";
-import NewPlantForm from "./NewPlantForm";
-import Search from "./Search";
+import PlantPage from "./PlantPage";
 
 function App() {
   const [plants, setPlants] = useState([]);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    fetch("http://localhost:6001/plants")
-      .then((r) => r.json())
-      .then((data) => setPlants(data));
-  }, []);
+  fetch("http://localhost:6001/plants")
+    .then((r) => r.json())
+    .then((data) =>
+      setPlants(
+        data.map((plant) => ({
+          ...plant,
+          inStock: plant.inStock ?? true,
+        }))
+      )
+    );
+}, []);
 
   function addPlant(newPlant) {
     setPlants([...plants, newPlant]);
+  }
+
+  function handleToggleSoldOut(id) {
+    setPlants((prevPlants) =>
+      prevPlants.map((plant) =>
+        plant.id === id
+          ? { ...plant, inStock: !plant.inStock }
+          : plant
+      )
+    );
   }
 
   const filteredPlants = plants.filter((plant) =>
@@ -25,11 +40,13 @@ function App() {
     <div>
       <h1>Plant Shop</h1>
 
-      <Search search={search} setSearch={setSearch} />
-
-      <NewPlantForm addPlant={addPlant} />
-
-      <PlantList plants={filteredPlants} />
+      <PlantPage
+        plants={filteredPlants}
+        addPlant={addPlant}
+        search={search}
+        setSearch={setSearch}
+        onSoldOut={handleToggleSoldOut}
+      />
     </div>
   );
 }
